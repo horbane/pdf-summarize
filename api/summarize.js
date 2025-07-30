@@ -8,13 +8,12 @@ module.exports = async function handler(req, res) {
 
   const { text } = req.body;
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    console.error("❌ Missing API key");
-    return res.status(500).json({ error: "Missing OpenRouter API key" });
-  }
+  const apiKey = "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"; // 👈 insert your OpenRouter key here
 
-  console.log("🔎 Incoming text length:", text?.length || 0);
+  if (!text || !apiKey) {
+    console.error("❌ Missing text or API key");
+    return res.status(400).json({ error: "Missing input text or API key" });
+  }
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -27,22 +26,22 @@ module.exports = async function handler(req, res) {
         model: "mistralai/mistral-small",
         messages: [
           { role: "system", content: "You are a helpful summarizer." },
-          { role: "user", content: `Summarize this:\n\n${text?.slice(0, 4000)}` }
+          { role: "user", content: `Summarize this:\n\n${text.slice(0, 4000)}` }
         ]
       })
     });
 
     const data = await response.json();
 
-    if (!data || !data.choices) {
-      console.error("❌ OpenRouter response error:", data);
-      return res.status(500).json({ error: "Unexpected response from model", raw: data });
+    if (!data.choices || !data.choices[0]?.message?.content) {
+      console.error("❌ Unexpected response:", data);
+      return res.status(500).json({ error: "Unexpected response", raw: data });
     }
 
     const summary = data.choices[0].message.content;
     res.status(200).json({ summary });
   } catch (err) {
-    console.error("💥 Fetch failed:", err);
+    console.error("💥 Request failed:", err);
     res.status(500).json({ error: "Summarization failed", details: err.message });
   }
 };
