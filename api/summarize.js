@@ -1,4 +1,12 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Only POST allowed" });
   }
@@ -25,7 +33,7 @@ export default async function handler(req, res) {
     const summary = data.choices?.[0]?.message?.content || "No summary found.";
     res.status(200).json({ summary });
   } catch (err) {
-    console.error("Error during summarization:", err);
-    res.status(500).json({ error: "Failed to summarize" });
+    console.error("Summarization failed:", err);
+    res.status(500).json({ error: "Summarization failed" });
   }
-}
+};
